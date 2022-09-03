@@ -1,9 +1,10 @@
 #include <Arduino.h>
-#include <Ultrassonic.h>
+#include <HCSR04.h>
 
-#define TRIGGER_PIN 4
-#define ECHO_PIN 5
-Ultrassonic ultrassonic(TRIGGER_PIN,ECHO_PIN);
+const int TRIGGER_PIN = 4;
+const int ECHO_PIN = 5;
+const int obstacle_distance = 20;
+UltraSonicDistanceSensor distanceSensor (TRIGGER_PIN,ECHO_PIN);
 #define IN1 2
 #define IN2 7
 #define IN3 8 
@@ -11,22 +12,45 @@ Ultrassonic ultrassonic(TRIGGER_PIN,ECHO_PIN);
 
 void setup() 
 {
+  Serial.begin(9600);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
+
+  pinMode(TRIGGER_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+   straight();
+   int distance = dist(TRIGGER_PIN, ECHO_PIN);
+   if(distance <= obstacle_distance)
+   {
+      Serial.print("Obstacle in: ");
+      Serial.print(distance);
+      Serial.println("cm");
+      Which_way();
+    }
+    else
+    {
+      Serial.print("Without obstacle: ");
+      Serial.print(distance);
+      Serial.println("cm");
+      straight();  
+    }
+    delay(100);
 }
 
-float dist()
+int dist(int trigpin, int pinecho)
 {
-  float cmMec;
-  long microsec = ultrassonic.timing();
-  cmMec = ultrassonic.convert(microsec, Ultrassonic::CM);
-  delay(10);
+  digitalWrite(trigpin, LOW);
+  delayMicroseconds(100);
+  digitalWrite(trigpin, HIGH);
+  delayMicroseconds(200);
+  digitalWrite(trigpin, LOW);
+
+  return pulseIn(pinecho, HIGH)/58;
 }
 
 void straight()
